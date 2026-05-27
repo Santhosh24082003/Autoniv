@@ -114,19 +114,19 @@ router.get('/dashboard/summary', requireAuth, async (req, res) => {
   });
 });
 
-router.get('/agents', requireAuth, async (req, res) => {
-  const agents = await listAgents(isAdmin(req.user) ? null : req.user.id);
+router.get('/agents', requireAuth, requireRole('admin'), async (req, res) => {
+  const agents = await listAgents();
   res.json({ agents: agents.map(publicAgent) });
 });
 
-router.post('/agents', requireAuth, async (req, res) => {
+router.post('/agents', requireAuth, requireRole('admin'), async (req, res) => {
   const { name, type, prompt, assistantId, voice, userId } = req.body || {};
 
   if (!name || !type) {
     return res.status(400).json({ error: 'name and type are required' });
   }
 
-  const ownerId = isAdmin(req.user) ? userId || req.user.id : req.user.id;
+  const ownerId = userId || req.user.id;
   const agent = await createAgent({
     userId: ownerId,
     type,
@@ -140,18 +140,14 @@ router.post('/agents', requireAuth, async (req, res) => {
   res.status(201).json({ agent: publicAgent(agent) });
 });
 
-router.put('/agents/:id', requireAuth, async (req, res) => {
+router.put('/agents/:id', requireAuth, requireRole('admin'), async (req, res) => {
   const { id } = req.params;
   const updates = req.body || {};
-  const agents = await listAgents(isAdmin(req.user) ? null : req.user.id);
+  const agents = await listAgents();
   const agent = agents.find((entry) => entry.id === id);
 
   if (!agent) {
     return res.status(404).json({ error: 'Agent not found' });
-  }
-
-  if (!canAccess(req.user, agent.userId)) {
-    return res.status(403).json({ error: 'Insufficient permissions' });
   }
 
   const updated = await updateAgent(id, {
@@ -166,17 +162,13 @@ router.put('/agents/:id', requireAuth, async (req, res) => {
   res.json({ agent: publicAgent(updated) });
 });
 
-router.delete('/agents/:id', requireAuth, async (req, res) => {
+router.delete('/agents/:id', requireAuth, requireRole('admin'), async (req, res) => {
   const { id } = req.params;
-  const agents = await listAgents(isAdmin(req.user) ? null : req.user.id);
+  const agents = await listAgents();
   const agent = agents.find((entry) => entry.id === id);
 
   if (!agent) {
     return res.status(404).json({ error: 'Agent not found' });
-  }
-
-  if (!canAccess(req.user, agent.userId)) {
-    return res.status(403).json({ error: 'Insufficient permissions' });
   }
 
   await deleteAgent(id);

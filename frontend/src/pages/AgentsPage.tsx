@@ -8,6 +8,7 @@ export default function AgentsPage() {
   const { token, user } = useAuth()
   const [agents, setAgents] = useState<Agent[]>([])
   const [loading, setLoading] = useState(true)
+  const [savingAgentId, setSavingAgentId] = useState('')
   const [error, setError] = useState('')
 
   async function loadAgents() {
@@ -29,12 +30,34 @@ export default function AgentsPage() {
 
   async function toggleStatus(agent: Agent) {
     if (!token) return
+
     const nextStatus = agent.status === 'active' ? 'disabled' : 'active'
-    await apiRequest(`/api/agents/${agent.id}`, {
-      method: 'PUT',
-      body: JSON.stringify({ status: nextStatus }),
-    }, token)
-    await loadAgents()
+    const previousAgents = agents
+
+    setSavingAgentId(agent.id)
+    setAgents((currentAgents) =>
+      currentAgents.map((entry) => (entry.id === agent.id ? { ...entry, status: nextStatus } : entry)),
+    )
+
+    try {
+      const response = await apiRequest<{ agent: Agent }>(
+        `/api/agents/${agent.id}`,
+        {
+          method: 'PUT',
+          body: JSON.stringify({ status: nextStatus }),
+        },
+        token,
+      )
+
+      setAgents((currentAgents) =>
+        currentAgents.map((entry) => (entry.id === agent.id ? response.agent : entry)),
+      )
+    } catch (err) {
+      setAgents(previousAgents)
+      setError(err instanceof Error ? err.message : 'Failed to update agent status')
+    } finally {
+      setSavingAgentId('')
+    }
   }
 
   if (loading) {
@@ -99,9 +122,10 @@ export default function AgentsPage() {
               <button
                 type="button"
                 onClick={() => toggleStatus(agent)}
+                disabled={savingAgentId === agent.id}
                 className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-white transition hover:border-white/20 hover:bg-white/10"
               >
-                {agent.status === 'active' ? 'Disable' : 'Enable'}
+                {savingAgentId === agent.id ? 'Updating...' : agent.status === 'active' ? 'Disable' : 'Enable'}
               </button>
             </div>
           </article>

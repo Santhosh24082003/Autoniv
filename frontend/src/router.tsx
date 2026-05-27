@@ -5,6 +5,7 @@ import FaqPage from './pages/FaqPage'
 import DashboardLayout from './layouts/DashboardLayout'
 import LoginPage from './pages/LoginPage'
 import RequireAuth from './components/RequireAuth'
+import RequireRole from './components/RequireRole'
 import OverviewPage from './pages/OverviewPage'
 import AgentsPage from './pages/AgentsPage'
 import CallsPage from './pages/CallsPage'
@@ -25,7 +26,14 @@ export default function AppRouter() {
           }
         >
           <Route path="/app/overview" element={<OverviewPage />} />
-          <Route path="/app/agents" element={<AgentsPage />} />
+          <Route
+            path="/app/agents"
+            element={
+              <RequireRole roles={['admin']}>
+                <AgentsPage />
+              </RequireRole>
+            }
+          />
           <Route path="/app/calls" element={<CallsPage />} />
           <Route path="/app/leads" element={<LeadsPage />} />
           <Route path="/app/billing" element={<BillingPage />} />

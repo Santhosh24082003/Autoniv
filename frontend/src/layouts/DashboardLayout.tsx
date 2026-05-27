@@ -3,7 +3,6 @@ import { useAuth } from '../context/AuthContext'
 
 const baseNavItems = [
   { label: 'Overview', to: '/app/overview' },
-  { label: 'Agents', to: '/app/agents' },
   { label: 'Calls', to: '/app/calls' },
   { label: 'Leads', to: '/app/leads' },
   { label: 'Billing', to: '/app/billing' },
@@ -15,7 +14,10 @@ const baseNavItems = [
 export default function DashboardLayout() {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
-  const navItems = user?.role === 'admin' ? [...baseNavItems, { label: 'Users', to: '/app/users' }] : baseNavItems
+  const navItems =
+    user?.role === 'admin'
+      ? [{ label: 'Agents', to: '/app/agents' }, ...baseNavItems, { label: 'Users', to: '/app/users' }]
+      : baseNavItems
 
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,_rgba(59,130,246,0.18),_transparent_30%),radial-gradient(circle_at_top_right,_rgba(16,185,129,0.14),_transparent_26%),linear-gradient(160deg,#07111f_0%,#0b1728_50%,#111b2e_100%)] text-slate-100">
