@@ -1,5 +1,6 @@
 const https = require('https');
 const { URL } = require('url');
+const { listUsers, createLead, createBooking } = require('../db');
 
 function forwardToCRM(crmUrl, payload) {
   return new Promise((resolve, reject) => {
@@ -35,13 +36,23 @@ function forwardToCRM(crmUrl, payload) {
 }
 
 async function captureLead(req, res) {
-  const { name, phone, purpose, callId } = req.body || {};
+  const { name, phone, purpose, callId, userId, agentId } = req.body || {};
 
   if (!name || !phone) {
     return res.status(400).json({ error: 'Missing required fields: name and phone' });
   }
 
-  const lead = { name, phone, purpose: purpose || '', callId: callId || null };
+  const users = await listUsers();
+  const ownerId = userId || users.find((entry) => entry.role === 'user')?.id || 'user-clinic';
+  const lead = await createLead({
+    userId: ownerId,
+    agentId: agentId || 'agent-receptionist',
+    name,
+    phone,
+    purpose: purpose || '',
+    status: 'new',
+    callId: callId || null,
+  });
   const crmUrl = process.env.CRM_WEBHOOK_URL || '';
 
   if (crmUrl) {
@@ -58,7 +69,8 @@ async function captureLead(req, res) {
 }
 
 async function captureBooking(req, res) {
-  const { serviceType, preferredDateTime, name, phone, notes, callId } = req.body || {};
+  const { serviceType, preferredDateTime, name, phone, notes, callId, userId, agentId, email, timezone } =
+    req.body || {};
 
   if (!serviceType || !preferredDateTime) {
     return res
@@ -66,14 +78,21 @@ async function captureBooking(req, res) {
       .json({ error: 'Missing required fields: serviceType and preferredDateTime' });
   }
 
-  const booking = {
+  const users = await listUsers();
+  const ownerId = userId || users.find((entry) => entry.role === 'user')?.id || 'user-clinic';
+  const booking = await createBooking({
+    userId: ownerId,
+    agentId: agentId || 'agent-booking',
     serviceType,
     preferredDateTime,
     name: name || '',
     phone: phone || '',
+    email: email || '',
+    timezone: timezone || '',
     notes: notes || '',
     callId: callId || null,
-  };
+    status: 'confirmed',
+  });
 
   const bookingWebhookUrl = process.env.BOOKING_WEBHOOK_URL || '';
 

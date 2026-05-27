@@ -1,12 +1,22 @@
-import { NavLink, Outlet } from 'react-router-dom'
+import { NavLink, Outlet, useNavigate } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext'
 
-const navItems = [
-  { label: 'Receptionist', to: '/' },
-  { label: 'Booking agent', to: '/booking' },
-  { label: 'FAQ assistant', to: '/faq' },
+const baseNavItems = [
+  { label: 'Overview', to: '/app/overview' },
+  { label: 'Agents', to: '/app/agents' },
+  { label: 'Calls', to: '/app/calls' },
+  { label: 'Leads', to: '/app/leads' },
+  { label: 'Billing', to: '/app/billing' },
+  { label: 'Receptionist', to: '/app/receptionist' },
+  { label: 'Booking agent', to: '/app/booking' },
+  { label: 'FAQ assistant', to: '/app/faq' },
 ]
 
 export default function DashboardLayout() {
+  const { user, logout } = useAuth()
+  const navigate = useNavigate()
+  const navItems = user?.role === 'admin' ? [...baseNavItems, { label: 'Users', to: '/app/users' }] : baseNavItems
+
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,_rgba(59,130,246,0.18),_transparent_30%),radial-gradient(circle_at_top_right,_rgba(16,185,129,0.14),_transparent_26%),linear-gradient(160deg,#07111f_0%,#0b1728_50%,#111b2e_100%)] text-slate-100">
       <div className="mx-auto flex min-h-screen w-full max-w-[1600px] flex-col lg:flex-row">
@@ -20,7 +30,7 @@ export default function DashboardLayout() {
               Voice assistant workspace
             </h1>
             <p className="mt-3 text-sm leading-6 text-slate-300">
-              Switch between the receptionist and booking agent from the sidebar.
+              Switch between the dashboard, users, calls, leads, and live agent launchers from the sidebar.
             </p>
 
             <nav className="mt-6 space-y-2">
@@ -48,6 +58,18 @@ export default function DashboardLayout() {
               <p className="text-xs uppercase tracking-[0.24em] text-sky-200/80">Current setup</p>
               <div className="mt-3 space-y-3 text-sm text-slate-300">
                 <div className="flex items-center justify-between gap-3">
+                  <span>Overview</span>
+                  <span className="text-slate-100">Ready</span>
+                </div>
+                <div className="flex items-center justify-between gap-3">
+                  <span>Calls</span>
+                  <span className="text-slate-100">Synced</span>
+                </div>
+                <div className="flex items-center justify-between gap-3">
+                  <span>Billing</span>
+                  <span className="text-slate-100">Active</span>
+                </div>
+                <div className="flex items-center justify-between gap-3">
                   <span>Receptionist</span>
                   <span className="text-slate-100">Ready</span>
                 </div>
@@ -64,6 +86,24 @@ export default function DashboardLayout() {
                   <span className="text-slate-100">Connected</span>
                 </div>
               </div>
+            </div>
+
+            <div className="mt-6 flex items-center justify-between gap-3 rounded-2xl border border-white/10 bg-slate-950/50 p-4">
+              <div>
+                <p className="text-xs uppercase tracking-[0.24em] text-sky-200/80">Signed in as</p>
+                <p className="mt-1 text-sm font-medium text-white">{user?.name}</p>
+                <p className="text-xs text-slate-400">{user?.role}</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  logout()
+                  navigate('/login', { replace: true })
+                }}
+                className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-white transition hover:border-white/20 hover:bg-white/10"
+              >
+                Logout
+              </button>
             </div>
           </div>
         </aside>
