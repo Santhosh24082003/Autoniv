@@ -1,3 +1,5 @@
+require('dotenv').config();
+
 const postgres = require('postgres');
 const { drizzle } = require('drizzle-orm/postgres-js');
 const { and, desc, eq } = require('drizzle-orm');
@@ -6,7 +8,7 @@ const { randomUUID } = require('crypto');
 const { sql } = require('drizzle-orm');
 const { users, agents, calls, leads, bookings, plans } = require('./schema');
 
-const connectionString = process.env.DATABASE_URL || 'postgres://postgres:postgres@localhost:5432/autoniv';
+const connectionString = process.env.DATABASE_URL ;
 const client = postgres(connectionString, { max: 5 });
 const db = drizzle(client);
 

@@ -1,7 +1,9 @@
+require('dotenv').config();
+
 const postgres = require('postgres');
 const { URL } = require('url');
 
-const connectionString = process.env.DATABASE_URL || 'postgres://postgres:postgres@localhost:5432/autoniv';
+const connectionString = process.env.DATABASE_URL ;
 
 async function ensureDatabase() {
   try {
