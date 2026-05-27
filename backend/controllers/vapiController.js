@@ -57,8 +57,41 @@ async function captureLead(req, res) {
   return res.status(200).json({ ok: true, forwarded: false, lead });
 }
 
+async function captureBooking(req, res) {
+  const { serviceType, preferredDateTime, name, phone, notes, callId } = req.body || {};
+
+  if (!serviceType || !preferredDateTime) {
+    return res
+      .status(400)
+      .json({ error: 'Missing required fields: serviceType and preferredDateTime' });
+  }
+
+  const booking = {
+    serviceType,
+    preferredDateTime,
+    name: name || '',
+    phone: phone || '',
+    notes: notes || '',
+    callId: callId || null,
+  };
+
+  const bookingWebhookUrl = process.env.BOOKING_WEBHOOK_URL || '';
+
+  if (bookingWebhookUrl) {
+    try {
+      const result = await forwardToCRM(bookingWebhookUrl, booking);
+      return res.status(200).json({ ok: true, forwarded: true, webhook: result, booking });
+    } catch (err) {
+      console.error('Failed to forward booking to webhook:', err);
+      return res.status(502).json({ ok: false, forwarded: false, error: String(err), booking });
+    }
+  }
+
+  return res.status(200).json({ ok: true, forwarded: false, booking });
+}
+
 function health(req, res) {
   res.json({ ok: true, service: 'vapi' });
 }
 
-module.exports = { captureLead, health };
+module.exports = { captureLead, captureBooking, health };
